@@ -222,9 +222,14 @@ static void *IOThreadMain(void *myid) {
     IOJobQueue *jq = &io_jobs[id];
     while (1) {
         /* Wait for jobs */
-        for (int j = 0; j < 1000000; j++) {
+        for (int j = 0; j < 10; j++) {
             jobs_to_process = IOJobQueue_availableJobs(jq);
-            if (jobs_to_process) break;
+            if (jobs_to_process == 0) {
+                _umonitor(&jq->head);
+                _umwait(0, __rdtsc() + 1000);
+            } else {
+                break;
+            }
         }
 
         /* Give the main thread a chance to stop this thread. */
